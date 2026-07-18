@@ -1,0 +1,153 @@
+# Match 5 — luck-based tabletop reveal game
+# Data folder: plugins/GenesiCore/games/Match5/
+
+# First player to find this many of their mob wins
+match-to: 5
+
+# How many of each mob are hidden on the board (rest are blanks)
+copies-per-mob: 8
+
+# Default board size for new arenas (override per-arena with /m5admin setsize)
+board:
+  columns: 6
+  rows: 6
+  cell-size: 1
+  gap: 0
+
+# Finding your mob keeps your turn (set false for strict alternate turns)
+keep-turn-on-hit: true
+
+lobby-countdown-seconds: 5
+start-countdown-seconds: 3
+
+# Optional entry fee charged on join (Vault when available)
+entry-fee: 0.0
+
+# Arcade points awarded at end (stored in points.yml)
+points-win: 3
+points-draw: 1
+
+# Who goes first: seat-a | seat-b | random
+first-turn: seat-a
+
+teleport-on-end: true
+
+# ---------------------------------------------------------------------------
+# Sidebar (right-hand scoreboard) — your mob + scores
+# ---------------------------------------------------------------------------
+sidebar:
+  enabled: true
+  title: "&6Match 5"
+
+# ---------------------------------------------------------------------------
+# Board visuals — ItemDisplay entities (lighter than MapView canvases)
+# Hidden tiles use a map item for the "reveal" look without map renderer cost.
+# ---------------------------------------------------------------------------
+displays:
+  enabled: true
+  scale: 0.85
+  y-offset: 0.55
+  # FIXED | CENTER | VERTICAL | HORIZONTAL
+  billboard: FIXED
+  hidden:
+    material: MAP
+    item-model: ""
+    custom-model-data: 0
+    itemsadder-id: ""
+    display-name: "&7?"
+  blank:
+    material: LIGHT_GRAY_CONCRETE
+    item-model: ""
+    custom-model-data: 0
+    itemsadder-id: ""
+    display-name: "&8Empty"
+  mob:
+    # When true, uses each player's assigned spawn egg material
+    use-spawn-egg: true
+    material: PIG_SPAWN_EGG
+    item-model: ""
+    custom-model-data: 0
+    itemsadder-id: ""
+    display-name: ""
+
+# Mob pool — two distinct picks assigned at match start
+mobs:
+  - material: PIG_SPAWN_EGG
+    label: Pig
+  - material: COW_SPAWN_EGG
+    label: Cow
+  - material: SHEEP_SPAWN_EGG
+    label: Sheep
+  - material: CHICKEN_SPAWN_EGG
+    label: Chicken
+  - material: WOLF_SPAWN_EGG
+    label: Wolf
+  - material: CAT_SPAWN_EGG
+    label: Cat
+  - material: FOX_SPAWN_EGG
+    label: Fox
+  - material: RABBIT_SPAWN_EGG
+    label: Rabbit
+  - material: HORSE_SPAWN_EGG
+    label: Horse
+  - material: PANDA_SPAWN_EGG
+    label: Panda
+
+reward:
+  deposit-to-vault: false
+  # Placeholders: {player} {uuid} {points} {arena} {result}
+  commands: []
+
+messages:
+  prefix: "&8[&6Match 5&8] &r"
+  no-permission: "&cYou don't have permission."
+  players-only: "&cOnly players can use this command."
+  arena-not-found: "&cArena &e{arena}&c was not found."
+  arena-not-ready: "&cArena &e{arena}&c needs lobby, origin, facing, and both seat joins."
+  arena-busy: "&cArena &e{arena}&c is already in a game."
+  arena-full: "&cArena &e{arena}&c already has 2 players."
+  seat-taken: "&cSeat &e{seat}&c is already taken."
+  already-playing: "&cYou are already in a Match 5 game."
+  not-playing: "&cYou are not in a Match 5 game."
+  joined-waiting: "&aJoined &e{arena}&a as seat &f{seat}&a (&f{count}/2&a). Waiting..."
+  lobby-countdown: "&eGame starts in &f{seconds}&e..."
+  need-more-players: "&cNeed 2 players to start."
+  left: "&eYou left Match 5."
+  player-left: "&e{player} &7left the lobby."
+  go: "&a&lGO!"
+  your-mob: "&7Your mob is &e{mob}&7 — find &f5&7 of them!"
+  your-turn: "&aYour turn! Click a hidden tile."
+  opponent-turn: "&7Waiting for &e{player}&7..."
+  keep-turn: "&aNice! Keep going."
+  already-revealed: "&cThat tile is already revealed."
+  not-your-turn: "&cIt's not your turn."
+  found-yours: "&aFound your &e{mob}&a! Score &f{score}/{target}"
+  found-opponent: "&cThat's &e{mob}&c — opponent's mob. Turn over."
+  found-blank: "&7Empty tile. Turn over."
+  win: "&a{player} &fwins Match 5!"
+  draw: "&eIt's a draw!"
+  you-win: "&aYou win! &e+{points} &apoints"
+  you-draw: "&eDraw. &7+{points} points"
+  you-lose: "&cYou lost. Better luck next time!"
+  game-over: "&eMatch 5 over! Winner: &f{winner}"
+  opponent-quit: "&e{player} &7left — you win by default!"
+  points-self: "&7Arcade points: &e{points}"
+  points-other: "&e{player}&7 has &e{points}&7 arcade points."
+  points-added: "&aAdded &e{amount}&a points to &e{player}&a. New balance: &e{points}"
+  points-removed: "&eRemoved &e{amount}&e points from &e{player}&e. New balance: &e{points}"
+  points-set: "&aSet &e{player}&a's points to &e{points}"
+  redeem-success: "&aRedeemed &e{amount}&a points from &e{player}&a. Remaining: &e{points}"
+  not-enough-points: "&c{player} only has &e{points}&c points."
+  arena-created: "&aCreated arena &e{arena}&a."
+  arena-deleted: "&aDeleted arena &e{arena}&a."
+  lobby-set: "&aSet lobby for &e{arena}&a."
+  origin-set: "&aSet board origin for &e{arena}&a (facing &f{facing}&a)."
+  facing-set: "&aSet facing for &e{arena}&a to &f{facing}&a."
+  join-set: "&aSet seat &e{seat}&a join block for &e{arena}&a."
+  size-set: "&aSet board size for &e{arena}&a to &f{columns}x{rows}&a."
+  fee-set: "&aEntry fee for &e{arena}&a set to &e{fee}&a."
+  reloaded: "&aConfiguration reloaded."
+  force-stopped: "&aForce-stopped the game in &e{arena}&a."
+  force-started: "&aForce-started &e{arena}&a."
+  economy-missing: "&cNo economy provider is available for entry fees."
+  not-enough-money: "&cYou need &e{amount}&c but only have &e{balance}&c."

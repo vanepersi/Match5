@@ -1,0 +1,33 @@
+name: Match5
+version: '${version}'
+main: dev.genesi.match5.Match5Plugin
+api-version: '26.1'
+authors: [Genesi]
+description: Luck-based tabletop Match 5 — find 5 of your mob, avoid your opponent's.
+depend: [GenesiGamesApi]
+softdepend: [Vault, ItemsAdder, GenesiCore]
+
+commands:
+  match5:
+    description: Join or leave a Match 5 game.
+    usage: /match5 <join|leave|start|points|arenas|info|help>
+    aliases: [m5, match]
+  match5admin:
+    description: Admin setup and control for Match 5 arenas.
+    usage: /match5admin <subcommand>
+    aliases: [m5admin, m5a]
+    permission: match5.admin
+
+permissions:
+  match5.use:
+    description: Join and play Match 5 arenas.
+    default: true
+  match5.points:
+    description: View your arcade points balance.
+    default: true
+  match5.admin:
+    description: Manage arenas, force games, and redeem points.
+    default: op
+  match5.bypass.fee:
+    description: Join without paying the entry fee.
+    default: false
