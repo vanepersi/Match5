@@ -24,7 +24,12 @@ public final class ItemFactory {
     }
 
     public ItemStack createHiddenTile() {
-        return createConfiguredItem("displays.hidden", Material.MAP);
+        // Empty MAP ItemDisplays are nearly invisible — never use MAP for hidden tiles.
+        ItemStack stack = createConfiguredItem("displays.hidden", Material.PAPER);
+        if (stack.getType() == Material.MAP || stack.getType() == Material.FILLED_MAP) {
+            return new ItemStack(Material.PAPER);
+        }
+        return stack;
     }
 
     public ItemStack createBlankTile() {
