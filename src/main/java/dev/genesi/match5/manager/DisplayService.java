@@ -16,8 +16,8 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 /**
- * Lightweight ItemDisplay tiles above the tabletop cells.
- * Hidden tiles use a map item (reveal aesthetic without MapView CPU cost).
+ * ItemDisplays float above each floor sign (click target).
+ * Signs carry text; displays show the mob egg / blank tile.
  */
 public final class DisplayService {
 
@@ -43,7 +43,7 @@ public final class DisplayService {
         session.setDisplays(displays);
 
         float scale = scale();
-        double yOffset = plugin.getConfig().getDouble("displays.y-offset", 0.55);
+        double yOffset = plugin.getConfig().getDouble("displays.y-offset", 0.85);
         ItemStack hidden = plugin.getItemFactory().createHiddenTile();
 
         for (int row = 0; row < geometry.getRows(); row++) {
@@ -51,18 +51,26 @@ public final class DisplayService {
                 int index = geometry.index(column, row);
                 Location spawnAt = geometry.displayLocation(column, row, yOffset);
                 ItemDisplay display = spawnAt.getWorld().spawn(spawnAt, ItemDisplay.class, entity ->
-                        configure(entity, hidden, scale, spawnAt.getYaw()));
+                        configure(entity, hidden, scale));
                 displays[index] = display;
             }
         }
     }
 
     public void revealCell(GameSession session, Arena arena, int column, int row) {
+        BoardGeometry geometry = new BoardGeometry(arena);
+        int index = geometry.index(column, row);
+
+        // Always update the sign text — this is what players actually see/click.
+        var signBlock = geometry.signBlock(column, row);
+        TileContent content = session.contentAt(index);
+        String mobLabel = mobLabel(session, content);
+        plugin.getSignService().applyReveal(signBlock, content, mobLabel);
+
         if (!enabled() || session.getDisplays() == null) {
             return;
         }
-        BoardGeometry geometry = new BoardGeometry(arena);
-        int index = geometry.index(column, row);
+
         ItemDisplay[] displays = session.getDisplays();
         if (index < 0 || index >= displays.length) {
             return;
@@ -75,11 +83,11 @@ public final class DisplayService {
             return;
         }
 
-        double yOffset = plugin.getConfig().getDouble("displays.y-offset", 0.55);
+        double yOffset = plugin.getConfig().getDouble("displays.y-offset", 0.85);
         Location spawnAt = geometry.displayLocation(column, row, yOffset);
         float scale = scale();
         displays[index] = spawnAt.getWorld().spawn(spawnAt, ItemDisplay.class, entity ->
-                configure(entity, item, scale, spawnAt.getYaw()));
+                configure(entity, item, scale));
     }
 
     public void clearDisplays(GameSession session) {
@@ -97,6 +105,15 @@ public final class DisplayService {
         session.setDisplays(null);
     }
 
+    private String mobLabel(GameSession session, TileContent content) {
+        if (content == TileContent.BLANK) {
+            return "";
+        }
+        Seat seat = content == TileContent.A ? Seat.A : Seat.B;
+        PlayerState owner = session.playerWithSeat(seat);
+        return owner == null ? "Mob" : owner.getMobLabel();
+    }
+
     private ItemStack itemFor(GameSession session, int index) {
         TileContent content = session.contentAt(index);
         if (content == TileContent.BLANK) {
@@ -110,17 +127,16 @@ public final class DisplayService {
         return plugin.getItemFactory().createMobTile(owner.getMob());
     }
 
-    private void configure(ItemDisplay entity, ItemStack item, float scale, float yaw) {
+    private void configure(ItemDisplay entity, ItemStack item, float scale) {
         entity.setItemStack(item);
         entity.setBillboard(readBillboard());
-        entity.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
+        entity.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.GUI);
         entity.setTransformation(new Transformation(
                 new Vector3f(0f, 0f, 0f),
                 new AxisAngle4f(0f, 0f, 1f, 0f),
                 new Vector3f(scale, scale, scale),
                 new AxisAngle4f(0f, 0f, 1f, 0f)
         ));
-        entity.setRotation(yaw, 90f);
         entity.setPersistent(false);
         entity.setInvulnerable(true);
         entity.setShadowRadius(0f);
@@ -128,15 +144,15 @@ public final class DisplayService {
     }
 
     private float scale() {
-        return (float) plugin.getConfig().getDouble("displays.scale", 0.85);
+        return (float) plugin.getConfig().getDouble("displays.scale", 0.7);
     }
 
     private Display.Billboard readBillboard() {
-        String raw = plugin.getConfig().getString("displays.billboard", "FIXED");
+        String raw = plugin.getConfig().getString("displays.billboard", "CENTER");
         try {
             return Display.Billboard.valueOf(raw.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            return Display.Billboard.FIXED;
+            return Display.Billboard.CENTER;
         }
     }
 }

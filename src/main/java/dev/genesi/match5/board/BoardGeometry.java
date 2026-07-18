@@ -113,23 +113,30 @@ public final class BoardGeometry {
         return null;
     }
 
+    /**
+     * Matches the cell sign block, or the solid under a floor sign (Y-1),
+     * so clicks register whether players hit the sign face or the table.
+     */
     public boolean contains(Block block, int column, int row) {
         Location base = cellOrigin(column, row);
         int bx = base.getBlockX();
         int by = base.getBlockY();
         int bz = base.getBlockZ();
-        for (int dy = 0; dy < 1; dy++) {
-            for (int dr = 0; dr < cellSize; dr++) {
-                for (int dc = 0; dc < cellSize; dc++) {
-                    int x = bx + (int) right.getX() * dc + (int) Math.round(forward.getX()) * dr;
-                    int z = bz + (int) right.getZ() * dc + (int) Math.round(forward.getZ()) * dr;
-                    if (block.getX() == x && block.getY() == by + dy && block.getZ() == z) {
-                        return true;
-                    }
+        for (int dr = 0; dr < cellSize; dr++) {
+            for (int dc = 0; dc < cellSize; dc++) {
+                int x = bx + (int) right.getX() * dc + (int) Math.round(forward.getX()) * dr;
+                int z = bz + (int) right.getZ() * dc + (int) Math.round(forward.getZ()) * dr;
+                if (block.getX() == x && block.getZ() == z
+                        && (block.getY() == by || block.getY() == by - 1 || block.getY() == by + 1)) {
+                    return true;
                 }
             }
         }
         return false;
+    }
+
+    public Block signBlock(int column, int row) {
+        return cellOrigin(column, row).getBlock();
     }
 
     public boolean isOnBoard(Block block) {

@@ -12,7 +12,7 @@ plugins/GenesiCore/games/Match5/
 
 - 2 players, click seat blocks or `/match5 join`
 - RNG board (default 6×6, 8 of each mob + blanks)
-- ItemDisplay tiles (map item for hidden — no MapView renderer cost)
+- **Floor signs** as click targets (TicTacToe-style) + ItemDisplay eggs above
 - Sidebar scoreboard shows your mob + scores
 - Optional Vault fee + arcade points (`points.yml`)
 
@@ -29,23 +29,26 @@ Requires **JDK 25+** and a sibling `../GenesiCore` checkout (composite build).
 ## Install (Club)
 
 1. Ensure `GenesiGamesApi.jar` is in `plugins/`
-2. Drop `Match5-1.0.0.jar` into `plugins/`
+2. Drop `Match5-1.0.1.jar` into `plugins/`
 3. Restart Paper 26.1.2
 4. Data auto-creates under `plugins/GenesiCore/games/Match5/`
 
 ## Admin setup
 
-Build a flat tabletop of clickable blocks (e.g. 6×6 stone), plus two seat blocks.
+Stand looking at the table. Origin = near-left corner of the sign grid.
 
 ```
 /m5admin create main
 /m5admin setlobby main
-/m5admin setorigin main          # look at the near-left corner block
+/m5admin setorigin main          # look at near-left corner block
+/m5admin buildboard main         # places 6×6 oak signs with "?"
 /m5admin setjoin main a          # look at seat A join block
 /m5admin setjoin main b          # look at seat B join block
 ```
 
 Optional: `/m5admin setsize main 6 6` · `/m5admin setfacing main NORTH`
+
+**Players click the signs**, not empty floor blocks.
 
 ## Player commands
 

@@ -355,7 +355,12 @@ public final class GameManager {
                 beginMatch(session, arena);
                 return;
             }
-            broadcast(session, "lobby-countdown", Map.of("seconds", String.valueOf(remaining[0])), null);
+            for (UUID uuid : session.getPlayers().keySet()) {
+                Player player = Bukkit.getPlayer(uuid);
+                if (player != null) {
+                    plugin.getMessageService().countdownTitle(player, remaining[0], "&7Starting soon...");
+                }
+            }
             remaining[0]--;
         }, 0L, 20L));
     }
@@ -373,6 +378,8 @@ public final class GameManager {
         session.setRevealed(new boolean[arena.cellCount()]);
 
         assignMobs(session);
+        // Floor signs are the click targets; ItemDisplays float above them.
+        plugin.getSignService().resetBoard(arena);
         plugin.getDisplayService().spawnBoard(session, arena);
         plugin.getSidebarService().update(session);
 
@@ -484,6 +491,8 @@ public final class GameManager {
         session.cancelTasks();
         plugin.getSidebarService().clearSession(session);
         plugin.getDisplayService().clearDisplays(session);
+        plugin.getArenaManager().get(session.getArenaName()).ifPresent(arena ->
+                plugin.getSignService().resetBoard(arena));
 
         if (!forced) {
             if (winnerSeat == null) {

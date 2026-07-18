@@ -45,6 +45,8 @@ public final class GameListener implements Listener {
         }
         if (plugin.getGameManager().handleInteract(event.getPlayer(), block)) {
             event.setCancelled(true);
+            event.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
+            event.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
         }
     }
 

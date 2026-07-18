@@ -46,6 +46,7 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
             case "setlobby", "lobby" -> handleSetLobby(sender, args);
             case "setorigin", "origin" -> handleSetOrigin(sender, args);
             case "setfacing", "facing" -> handleSetFacing(sender, args);
+            case "buildboard", "build", "placesigns" -> handleBuildBoard(sender, args);
             case "setjoin", "join" -> handleSetJoin(sender, args);
             case "setsize", "size" -> handleSetSize(sender, args);
             case "setfee", "fee" -> handleSetFee(sender, args);
@@ -79,7 +80,7 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
         plugin.getArenaManager().create(name);
         plugin.getMessageService().send(sender, "arena-created", Map.of("arena", name));
         plugin.getMessageService().sendRaw(sender,
-                "&7Next: setlobby, setorigin (corner of table), setjoin a|b (look at seat blocks)");
+                "&7Next: setlobby → setorigin (near-left corner) → buildboard → setjoin a|b");
     }
 
     private void handleDelete(CommandSender sender, String[] args) {
@@ -138,11 +139,36 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
         arena.get().setOrigin(target.getLocation());
-        arena.get().setFacing(GameManager.yawToFacing(player.getLocation().getYaw()));
+        // Board faces toward the admin (opposite of look direction).
+        BlockFace look = GameManager.yawToFacing(player.getLocation().getYaw());
+        arena.get().setFacing(look.getOppositeFace());
         plugin.getArenaManager().save();
         plugin.getMessageService().send(sender, "origin-set", Map.of(
                 "arena", arena.get().getName(),
                 "facing", arena.get().getFacing().name()
+        ));
+        plugin.getMessageService().sendRaw(sender,
+                "&7Next: &e/m5admin buildboard " + arena.get().getName() + " &7to place the sign grid.");
+    }
+
+    private void handleBuildBoard(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            plugin.getMessageService().sendRaw(sender, "&cUsage: /m5admin buildboard <arena>");
+            return;
+        }
+        Optional<Arena> arena = plugin.getArenaManager().get(args[1]);
+        if (arena.isEmpty()) {
+            plugin.getMessageService().send(sender, "arena-not-found", Map.of("arena", args[1]));
+            return;
+        }
+        if (arena.get().getOrigin() == null || arena.get().getOrigin().getWorld() == null) {
+            plugin.getMessageService().sendRaw(sender, "&cSet origin first: /m5admin setorigin " + arena.get().getName());
+            return;
+        }
+        int placed = plugin.getSignService().buildBoard(arena.get());
+        plugin.getMessageService().send(sender, "board-built", Map.of(
+                "arena", arena.get().getName(),
+                "count", String.valueOf(placed)
         ));
     }
 
@@ -434,7 +460,8 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
     private void sendHelp(CommandSender sender) {
         plugin.getMessageService().sendRaw(sender, "&e/m5admin create|delete <arena>");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin setlobby <arena>");
-        plugin.getMessageService().sendRaw(sender, "&e/m5admin setorigin <arena> &7(look at corner)");
+        plugin.getMessageService().sendRaw(sender, "&e/m5admin setorigin <arena> &7(look at near-left corner)");
+        plugin.getMessageService().sendRaw(sender, "&e/m5admin buildboard <arena> &7(places sign grid)");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin setjoin <arena> <a|b>");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin setsize <arena> <cols> <rows>");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin forcestart|forcestop <arena>");
@@ -448,15 +475,15 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length == 1) {
             return filter(Arrays.asList(
-                    "help", "create", "delete", "setlobby", "setorigin", "setfacing", "setjoin",
-                    "setsize", "setfee", "list", "info", "forcestart", "forcestop",
+                    "help", "create", "delete", "setlobby", "setorigin", "setfacing", "buildboard",
+                    "setjoin", "setsize", "setfee", "list", "info", "forcestart", "forcestop",
                     "givepoints", "takepoints", "setplayerpoints", "redeem", "reload"
             ), args[0]);
         }
         if (args.length == 2) {
             String sub = args[0].toLowerCase(Locale.ROOT);
-            if (List.of("delete", "setlobby", "setorigin", "setfacing", "setjoin", "setsize", "setfee",
-                    "info", "forcestart", "forcestop").contains(sub)) {
+            if (List.of("delete", "setlobby", "setorigin", "setfacing", "buildboard", "setjoin",
+                    "setsize", "setfee", "info", "forcestart", "forcestop").contains(sub)) {
                 return filter(plugin.getArenaManager().getArenas().stream().map(Arena::getName).toList(), args[1]);
             }
             if (List.of("givepoints", "takepoints", "setplayerpoints", "redeem").contains(sub)) {

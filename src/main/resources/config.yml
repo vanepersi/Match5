@@ -40,17 +40,38 @@ sidebar:
   title: "&6Match 5"
 
 # ---------------------------------------------------------------------------
-# Board visuals — ItemDisplay entities (lighter than MapView canvases)
-# Hidden tiles use a map item for the "reveal" look without map renderer cost.
+# Floor signs — click targets (like TicTacToe). Use /m5admin buildboard.
+# ---------------------------------------------------------------------------
+signs:
+  material: OAK_SIGN
+  write-text: true
+  glowing: false
+  hidden-lines:
+    - ""
+    - "  ?"
+    - ""
+    - ""
+  blank-lines:
+    - ""
+    - " ----"
+    - ""
+    - ""
+  hidden-color: GRAY
+  blank-color: LIGHT_GRAY
+  mob-color: YELLOW
+
+# ---------------------------------------------------------------------------
+# ItemDisplays float above each sign (spawn eggs when revealed).
+# Hidden uses PAPER — empty MAP items are nearly invisible as displays.
 # ---------------------------------------------------------------------------
 displays:
   enabled: true
-  scale: 0.85
-  y-offset: 0.55
-  # FIXED | CENTER | VERTICAL | HORIZONTAL
-  billboard: FIXED
+  scale: 0.7
+  y-offset: 0.85
+  # CENTER faces the player (best for tabletop)
+  billboard: CENTER
   hidden:
-    material: MAP
+    material: PAPER
     item-model: ""
     custom-model-data: 0
     itemsadder-id: ""
@@ -62,7 +83,6 @@ displays:
     itemsadder-id: ""
     display-name: "&8Empty"
   mob:
-    # When true, uses each player's assigned spawn egg material
     use-spawn-egg: true
     material: PIG_SPAWN_EGG
     item-model: ""
@@ -142,6 +162,7 @@ messages:
   arena-deleted: "&aDeleted arena &e{arena}&a."
   lobby-set: "&aSet lobby for &e{arena}&a."
   origin-set: "&aSet board origin for &e{arena}&a (facing &f{facing}&a)."
+  board-built: "&aPlaced &f{count}&a floor signs for &e{arena}&a. Click signs to play."
   facing-set: "&aSet facing for &e{arena}&a to &f{facing}&a."
   join-set: "&aSet seat &e{seat}&a join block for &e{arena}&a."
   size-set: "&aSet board size for &e{arena}&a to &f{columns}x{rows}&a."
