@@ -1,8 +1,8 @@
 package dev.genesi.match5.model;
 
+import dev.genesi.match5.util.IconDef;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -16,9 +16,9 @@ public final class PlayerState {
     private final UUID uuid;
     private final String name;
     private Seat seat;
-    private Material mob = Material.PIG_SPAWN_EGG;
-    private String mobLabel = "Pig";
+    private IconDef icon;
     private int score;
+    private int chances;
     private Location returnLocation;
     private GameMode gameMode;
     private boolean flying;
@@ -53,20 +53,16 @@ public final class PlayerState {
         this.seat = seat;
     }
 
-    public Material getMob() {
-        return mob;
+    public IconDef getIcon() {
+        return icon;
     }
 
-    public void setMob(Material mob) {
-        this.mob = mob == null ? Material.PIG_SPAWN_EGG : mob;
+    public void setIcon(IconDef icon) {
+        this.icon = icon;
     }
 
-    public String getMobLabel() {
-        return mobLabel;
-    }
-
-    public void setMobLabel(String mobLabel) {
-        this.mobLabel = mobLabel == null || mobLabel.isBlank() ? "Mob" : mobLabel;
+    public String getIconLabel() {
+        return icon == null ? "Icon" : icon.label();
     }
 
     public int getScore() {
@@ -79,6 +75,20 @@ public final class PlayerState {
 
     public void addScore(int amount) {
         this.score = Math.max(0, this.score + amount);
+    }
+
+    public int getChances() {
+        return chances;
+    }
+
+    public void setChances(int chances) {
+        this.chances = Math.max(0, chances);
+    }
+
+    public void useChance() {
+        if (chances > 0) {
+            chances--;
+        }
     }
 
     public Location getReturnLocation() {

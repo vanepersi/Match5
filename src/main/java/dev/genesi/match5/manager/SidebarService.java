@@ -14,9 +14,6 @@ import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.UUID;
 
-/**
- * Per-player sidebar showing your mob, score, and whose turn it is.
- */
 public final class SidebarService {
 
     private final Match5Plugin plugin;
@@ -32,26 +29,21 @@ public final class SidebarService {
         int target = plugin.getConfig().getInt("match-to", 5);
         for (PlayerState state : session.getPlayers().values()) {
             Player player = Bukkit.getPlayer(state.getUuid());
-            if (player == null) {
-                continue;
+            if (player != null) {
+                render(player, session, state, target);
             }
-            render(player, session, state, target);
         }
     }
 
     public void clear(Player player) {
-        if (player == null) {
-            return;
+        if (player != null) {
+            player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
         }
-        player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
     }
 
     public void clearSession(GameSession session) {
         for (UUID uuid : session.getPlayers().keySet()) {
-            Player player = Bukkit.getPlayer(uuid);
-            if (player != null) {
-                clear(player);
-            }
+            clear(Bukkit.getPlayer(uuid));
         }
     }
 
@@ -62,23 +54,21 @@ public final class SidebarService {
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         PlayerState opponent = session.playerWithSeat(self.getSeat() == null ? Seat.A : self.getSeat().opposite());
-        String turnName = "?";
         PlayerState current = session.playerWithSeat(session.getCurrentTurn());
-        if (current != null) {
-            turnName = current.getName();
-        }
+        String turnName = current == null ? "?" : current.getName();
 
-        int line = 10;
+        int line = 12;
         set(objective, color("&7────────────"), line--);
-        set(objective, color("&fYour mob"), line--);
-        set(objective, color("&e" + self.getMobLabel()), line--);
-        set(objective, color("&fScore &a" + self.getScore() + "&7/&f" + target), line--);
+        set(objective, color("&fYour icon"), line--);
+        set(objective, color("&e" + self.getIconLabel()), line--);
+        set(objective, color("&fFound &a" + self.getScore() + "&7/&f" + target), line--);
+        set(objective, color("&fChances &b" + self.getChances()), line--);
         set(objective, color(" "), line--);
         if (opponent != null) {
-            set(objective, color("&fOpponent"), line--);
-            set(objective, color("&7" + opponent.getName()), line--);
-            set(objective, color("&fTheir mob &e" + opponent.getMobLabel()), line--);
-            set(objective, color("&fScore &c" + opponent.getScore() + "&7/&f" + target), line--);
+            set(objective, color("&fOpponent &7" + opponent.getName()), line--);
+            set(objective, color("&7" + opponent.getIconLabel()
+                    + " &8| &f" + opponent.getScore() + "/" + target
+                    + " &8| &b" + opponent.getChances()), line--);
             set(objective, color("  "), line--);
         }
         set(objective, color("&fTurn &b" + turnName), line);
@@ -87,6 +77,7 @@ public final class SidebarService {
     }
 
     private static void set(Objective objective, String text, int score) {
+        // Scoreboard lines must be unique — pad with invisible color codes if needed
         objective.getScore(text).setScore(score);
     }
 

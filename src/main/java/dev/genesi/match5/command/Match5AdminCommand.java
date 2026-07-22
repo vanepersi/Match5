@@ -80,7 +80,7 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
         plugin.getArenaManager().create(name);
         plugin.getMessageService().send(sender, "arena-created", Map.of("arena", name));
         plugin.getMessageService().sendRaw(sender,
-                "&7Next: setlobby → setorigin (near-left corner) → buildboard → setjoin a|b");
+                "&7Next: setlobby → setorigin (near-LEFT corner while facing the table) → buildboard → setjoin a|b");
     }
 
     private void handleDelete(CommandSender sender, String[] args) {
@@ -139,7 +139,7 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
         arena.get().setOrigin(target.getLocation());
-        // Board faces toward the admin (opposite of look direction).
+        // Facing = toward the admin. Columns grow to admin's right; rows grow into the board.
         BlockFace look = GameManager.yawToFacing(player.getLocation().getYaw());
         arena.get().setFacing(look.getOppositeFace());
         plugin.getArenaManager().save();
@@ -148,7 +148,8 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
                 "facing", arena.get().getFacing().name()
         ));
         plugin.getMessageService().sendRaw(sender,
-                "&7Next: &e/m5admin buildboard " + arena.get().getName() + " &7to place the sign grid.");
+                "&7Origin = near-&fleft&7 corner from your view. Next: &e/m5admin buildboard "
+                        + arena.get().getName());
     }
 
     private void handleBuildBoard(CommandSender sender, String[] args) {
@@ -165,7 +166,7 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
             plugin.getMessageService().sendRaw(sender, "&cSet origin first: /m5admin setorigin " + arena.get().getName());
             return;
         }
-        int placed = plugin.getSignService().buildBoard(arena.get());
+        int placed = plugin.getDisplayService().buildBoard(arena.get());
         plugin.getMessageService().send(sender, "board-built", Map.of(
                 "arena", arena.get().getName(),
                 "count", String.valueOf(placed)
@@ -460,8 +461,8 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
     private void sendHelp(CommandSender sender) {
         plugin.getMessageService().sendRaw(sender, "&e/m5admin create|delete <arena>");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin setlobby <arena>");
-        plugin.getMessageService().sendRaw(sender, "&e/m5admin setorigin <arena> &7(look at near-left corner)");
-        plugin.getMessageService().sendRaw(sender, "&e/m5admin buildboard <arena> &7(places sign grid)");
+        plugin.getMessageService().sendRaw(sender, "&e/m5admin setorigin <arena> &7(look at near-LEFT corner block)");
+        plugin.getMessageService().sendRaw(sender, "&e/m5admin buildboard <arena> &7(flat icon previews on blocks)");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin setjoin <arena> <a|b>");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin setsize <arena> <cols> <rows>");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin forcestart|forcestop <arena>");

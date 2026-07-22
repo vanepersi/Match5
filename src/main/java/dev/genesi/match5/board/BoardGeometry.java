@@ -8,8 +8,12 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.util.Vector;
 
 /**
- * Flat tabletop grid: columns go right from the player view, rows go away from players.
- * {@code facing} is the direction the near edge faces toward players.
+ * Flat tabletop grid on existing blocks.
+ * <p>
+ * Origin = near-left corner from the player's view.<br>
+ * Columns grow to the player's right.<br>
+ * Rows grow away from the player (into the board).<br>
+ * {@code facing} = direction the near edge faces toward players.
  */
 public final class BoardGeometry {
 
@@ -40,15 +44,19 @@ public final class BoardGeometry {
         this.cellSize = arena.getCellSize();
         this.gap = arena.getGap();
         this.right = rightVector(facing);
-        this.forward = facing.getDirection().multiply(-1).normalize();
+        // Into the board = away from players = opposite of facing-toward-players
+        this.forward = facing.getOppositeFace().getDirection();
     }
 
-    public static Vector rightVector(BlockFace facing) {
-        return switch (facing) {
-            case NORTH -> new Vector(1, 0, 0);
-            case SOUTH -> new Vector(-1, 0, 0);
-            case EAST -> new Vector(0, 0, 1);
-            case WEST -> new Vector(0, 0, -1);
+    /**
+     * Column step toward the viewer's right when looking at the board.
+     */
+    public static Vector rightVector(BlockFace facingTowardPlayers) {
+        return switch (facingTowardPlayers) {
+            case SOUTH -> new Vector(1, 0, 0);   // look north → right = east
+            case NORTH -> new Vector(-1, 0, 0);  // look south → right = west
+            case WEST -> new Vector(0, 0, 1);    // look east → right = south
+            case EAST -> new Vector(0, 0, -1);   // look west → right = north
             default -> new Vector(1, 0, 0);
         };
     }
@@ -73,30 +81,31 @@ public final class BoardGeometry {
         return row * columns + column;
     }
 
-    /** Southwest-ish corner block of a cell. */
     public Location cellOrigin(int column, int row) {
         int step = cellSize + gap;
         int x = originX
                 + (int) right.getX() * column * step
                 + (int) Math.round(forward.getX()) * row * step;
-        int y = originY;
         int z = originZ
                 + (int) right.getZ() * column * step
                 + (int) Math.round(forward.getZ()) * row * step;
-        return new Location(world, x, y, z);
+        return new Location(world, x, originY, z);
     }
 
+    /** Center of the top face — flat ItemDisplays sit here. */
     public Location displayLocation(int column, int row, double yOffset) {
         Location base = cellOrigin(column, row);
-        double half = cellSize / 2.0;
+        double half = (cellSize - 1) / 2.0;
         return new Location(
                 world,
                 base.getX() + (int) right.getX() * half + (int) Math.round(forward.getX()) * half + 0.5,
                 base.getY() + yOffset,
-                base.getZ() + (int) right.getZ() * half + (int) Math.round(forward.getZ()) * half + 0.5,
-                yawFrom(facing),
-                0f
+                base.getZ() + (int) right.getZ() * half + (int) Math.round(forward.getZ()) * half + 0.5
         );
+    }
+
+    public Block cellBlock(int column, int row) {
+        return cellOrigin(column, row).getBlock();
     }
 
     public int[] cellAt(Block block) {
@@ -113,10 +122,6 @@ public final class BoardGeometry {
         return null;
     }
 
-    /**
-     * Matches the cell sign block, or the solid under a floor sign (Y-1),
-     * so clicks register whether players hit the sign face or the table.
-     */
     public boolean contains(Block block, int column, int row) {
         Location base = cellOrigin(column, row);
         int bx = base.getBlockX();
@@ -126,8 +131,9 @@ public final class BoardGeometry {
             for (int dc = 0; dc < cellSize; dc++) {
                 int x = bx + (int) right.getX() * dc + (int) Math.round(forward.getX()) * dr;
                 int z = bz + (int) right.getZ() * dc + (int) Math.round(forward.getZ()) * dr;
+                // Allow clicking the table block or a flat plate sitting on it
                 if (block.getX() == x && block.getZ() == z
-                        && (block.getY() == by || block.getY() == by - 1 || block.getY() == by + 1)) {
+                        && (block.getY() == by || block.getY() == by + 1)) {
                     return true;
                 }
             }
@@ -135,21 +141,7 @@ public final class BoardGeometry {
         return false;
     }
 
-    public Block signBlock(int column, int row) {
-        return cellOrigin(column, row).getBlock();
-    }
-
     public boolean isOnBoard(Block block) {
         return cellAt(block) != null;
-    }
-
-    private static float yawFrom(BlockFace face) {
-        return switch (face) {
-            case NORTH -> 180f;
-            case SOUTH -> 0f;
-            case WEST -> 90f;
-            case EAST -> -90f;
-            default -> 0f;
-        };
     }
 }

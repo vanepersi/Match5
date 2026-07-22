@@ -8,7 +8,8 @@ import dev.genesi.match5.model.GameSession;
 import dev.genesi.match5.model.PlayerState;
 import dev.genesi.match5.model.Seat;
 import dev.genesi.match5.model.TileContent;
-import dev.genesi.match5.util.MobPalette;
+import dev.genesi.match5.util.IconDef;
+import dev.genesi.match5.util.IconPalette;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -48,7 +49,8 @@ public final class GameManager {
 
     public boolean isBusy(String arenaName) {
         GameSession session = byArena.get(arenaName.toLowerCase(Locale.ROOT));
-        return session != null && session.getState() != GameSession.State.WAITING
+        return session != null
+                && session.getState() != GameSession.State.WAITING
                 && session.getState() != GameSession.State.LOBBY_COUNTDOWN;
     }
 
@@ -69,7 +71,8 @@ public final class GameManager {
         }
 
         GameSession session = byArena.computeIfAbsent(arena.getName(), GameSession::new);
-        if (session.getState() != GameSession.State.WAITING && session.getState() != GameSession.State.LOBBY_COUNTDOWN) {
+        if (session.getState() != GameSession.State.WAITING
+                && session.getState() != GameSession.State.LOBBY_COUNTDOWN) {
             return "arena-busy";
         }
         if (session.playerCount() >= 2) {
@@ -147,9 +150,8 @@ public final class GameManager {
                 || session.getState() == GameSession.State.START_COUNTDOWN) {
             PlayerState quitter = session.getPlayer(player.getUniqueId());
             Seat winnerSeat = quitter == null || quitter.getSeat() == null ? null : quitter.getSeat().opposite();
-            PlayerState winner = winnerSeat == null ? null : session.playerWithSeat(winnerSeat);
-            if (winner != null) {
-                Player winnerPlayer = Bukkit.getPlayer(winner.getUuid());
+            if (winnerSeat != null && session.playerWithSeat(winnerSeat) != null) {
+                Player winnerPlayer = Bukkit.getPlayer(session.playerWithSeat(winnerSeat).getUuid());
                 if (winnerPlayer != null) {
                     plugin.getMessageService().send(winnerPlayer, "opponent-quit", Map.of("player", player.getName()));
                 }
@@ -169,7 +171,6 @@ public final class GameManager {
         if (state != null) {
             restorePlayer(player, state);
         }
-
         if (announce) {
             plugin.getMessageService().send(player, "left");
         }
@@ -199,7 +200,8 @@ public final class GameManager {
             plugin.getMessageService().send(player, "need-more-players");
             return;
         }
-        if (session.getState() != GameSession.State.WAITING && session.getState() != GameSession.State.LOBBY_COUNTDOWN) {
+        if (session.getState() != GameSession.State.WAITING
+                && session.getState() != GameSession.State.LOBBY_COUNTDOWN) {
             plugin.getMessageService().send(player, "arena-busy", Map.of("arena", arena.get().getName()));
             return;
         }
@@ -273,6 +275,11 @@ public final class GameManager {
             plugin.getMessageService().send(player, "not-your-turn");
             return true;
         }
+        if (state.getChances() <= 0) {
+            plugin.getMessageService().send(player, "no-chances");
+            passTurn(session, state);
+            return true;
+        }
 
         int index = geometry.index(cell[0], cell[1]);
         if (session.isRevealed(index)) {
@@ -280,49 +287,69 @@ public final class GameManager {
             return true;
         }
 
+        // Spend one chance per reveal
+        state.useChance();
         session.getRevealed()[index] = true;
         TileContent content = session.contentAt(index);
         plugin.getDisplayService().revealCell(session, arena, cell[0], cell[1]);
         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1.15f);
 
         int target = Math.max(1, plugin.getConfig().getInt("match-to", 5));
-        boolean keepTurn = false;
+        boolean hit = content.belongsTo(state.getSeat());
 
-        if (content.belongsTo(state.getSeat())) {
+        if (hit) {
             state.addScore(1);
             plugin.getMessageService().send(player, "found-yours", Map.of(
-                    "mob", state.getMobLabel(),
+                    "icon", state.getIconLabel(),
                     "score", String.valueOf(state.getScore()),
-                    "target", String.valueOf(target)
+                    "target", String.valueOf(target),
+                    "chances", String.valueOf(state.getChances())
             ));
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1.3f);
-            keepTurn = plugin.getConfig().getBoolean("keep-turn-on-hit", true);
             if (state.getScore() >= target) {
                 plugin.getSidebarService().update(session);
                 endGame(session, state.getSeat(), false);
                 return true;
             }
         } else if (content == TileContent.BLANK) {
-            plugin.getMessageService().send(player, "found-blank");
+            plugin.getMessageService().send(player, "found-blank", Map.of(
+                    "chances", String.valueOf(state.getChances())
+            ));
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.7f);
         } else {
             PlayerState owner = session.playerWithSeat(content == TileContent.A ? Seat.A : Seat.B);
-            String mob = owner == null ? "mob" : owner.getMobLabel();
-            plugin.getMessageService().send(player, "found-opponent", Map.of("mob", mob));
+            String icon = owner == null ? "icon" : owner.getIconLabel();
+            plugin.getMessageService().send(player, "found-opponent", Map.of(
+                    "icon", icon,
+                    "chances", String.valueOf(state.getChances())
+            ));
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
         }
 
         if (BoardLogic.allRevealed(session.getRevealed())) {
-            Seat winner = resolveScoreWinner(session);
-            endGame(session, winner, false);
+            endGame(session, resolveScoreWinner(session), false);
             return true;
         }
 
-        if (!keepTurn) {
-            session.setCurrentTurn(state.getSeat().opposite());
-            notifyTurn(session);
-        } else {
+        // Out of chances without reaching target → lose if opponent can still win, else score compare
+        if (state.getChances() <= 0 && state.getScore() < target) {
+            plugin.getMessageService().send(player, "out-of-chances");
+            PlayerState opponent = session.playerWithSeat(state.getSeat().opposite());
+            if (opponent != null && opponent.getChances() <= 0) {
+                endGame(session, resolveScoreWinner(session), false);
+                return true;
+            }
+            // Opponent keeps playing; this player can no longer take turns
+            passTurn(session, state);
+            plugin.getSidebarService().update(session);
+            return true;
+        }
+
+        boolean keepTurn = hit && plugin.getConfig().getBoolean("keep-turn-on-hit", true);
+        if (keepTurn) {
             plugin.getMessageService().send(player, "keep-turn");
+        } else {
+            passTurn(session, state);
         }
         plugin.getSidebarService().update(session);
         return true;
@@ -332,13 +359,25 @@ public final class GameManager {
         for (GameSession session : new ArrayList<>(byArena.values())) {
             endGame(session, null, true);
         }
+        plugin.getDisplayService().clearAllPreviews();
+    }
+
+    private void passTurn(GameSession session, PlayerState current) {
+        Seat next = current.getSeat().opposite();
+        PlayerState opponent = session.playerWithSeat(next);
+        if (opponent != null && opponent.getChances() > 0) {
+            session.setCurrentTurn(next);
+            notifyTurn(session);
+            return;
+        }
+        // Opponent also out — end by score
+        if (opponent == null || opponent.getChances() <= 0) {
+            endGame(session, resolveScoreWinner(session), false);
+        }
     }
 
     private void maybeStartLobbyCountdown(GameSession session, Arena arena) {
-        if (session.playerCount() < 2) {
-            return;
-        }
-        if (session.getState() == GameSession.State.LOBBY_COUNTDOWN) {
+        if (session.playerCount() < 2 || session.getState() == GameSession.State.LOBBY_COUNTDOWN) {
             return;
         }
         session.setState(GameSession.State.LOBBY_COUNTDOWN);
@@ -355,12 +394,7 @@ public final class GameManager {
                 beginMatch(session, arena);
                 return;
             }
-            for (UUID uuid : session.getPlayers().keySet()) {
-                Player player = Bukkit.getPlayer(uuid);
-                if (player != null) {
-                    plugin.getMessageService().countdownTitle(player, remaining[0], "&7Starting soon...");
-                }
-            }
+            broadcast(session, "lobby-countdown", Map.of("seconds", String.valueOf(remaining[0])), null);
             remaining[0]--;
         }, 0L, 20L));
     }
@@ -369,7 +403,8 @@ public final class GameManager {
         session.setState(GameSession.State.START_COUNTDOWN);
         session.setSize(arena.getColumns(), arena.getRows());
 
-        int copies = Math.max(1, plugin.getConfig().getInt("copies-per-mob", 8));
+        int target = Math.max(1, plugin.getConfig().getInt("match-to", 5));
+        int copies = Math.max(target, plugin.getConfig().getInt("copies-per-icon", target));
         int maxCopies = arena.cellCount() / 2;
         if (copies > maxCopies) {
             copies = maxCopies;
@@ -377,16 +412,18 @@ public final class GameManager {
         session.setHidden(BoardLogic.generate(arena.getColumns(), arena.getRows(), copies));
         session.setRevealed(new boolean[arena.cellCount()]);
 
-        assignMobs(session);
-        // Floor signs are the click targets; ItemDisplays float above them.
-        plugin.getSignService().resetBoard(arena);
+        assignIcons(session);
         plugin.getDisplayService().spawnBoard(session, arena);
         plugin.getSidebarService().update(session);
 
         for (PlayerState state : session.getPlayers().values()) {
             Player player = Bukkit.getPlayer(state.getUuid());
             if (player != null) {
-                plugin.getMessageService().send(player, "your-mob", Map.of("mob", state.getMobLabel()));
+                plugin.getMessageService().send(player, "your-icon", Map.of(
+                        "icon", state.getIconLabel(),
+                        "target", String.valueOf(target),
+                        "chances", String.valueOf(state.getChances())
+                ));
             }
         }
 
@@ -437,19 +474,20 @@ public final class GameManager {
                 () -> plugin.getSidebarService().update(session), 40L, 40L));
     }
 
-    private void assignMobs(GameSession session) {
-        MobPalette.MobChoice[] picks = MobPalette.pickTwo(MobPalette.load(plugin.getConfig()));
+    private void assignIcons(GameSession session) {
+        IconDef[] picks = IconPalette.pickTwo(IconPalette.load(plugin.getConfig()));
+        int chances = Math.max(1, plugin.getConfig().getInt("chances", 10));
         PlayerState a = session.playerWithSeat(Seat.A);
         PlayerState b = session.playerWithSeat(Seat.B);
         if (a != null) {
-            a.setMob(picks[0].material());
-            a.setMobLabel(picks[0].label());
+            a.setIcon(picks[0]);
             a.setScore(0);
+            a.setChances(chances);
         }
         if (b != null) {
-            b.setMob(picks[1].material());
-            b.setMobLabel(picks[1].label());
+            b.setIcon(picks[1]);
             b.setScore(0);
+            b.setChances(chances);
         }
     }
 
@@ -491,8 +529,6 @@ public final class GameManager {
         session.cancelTasks();
         plugin.getSidebarService().clearSession(session);
         plugin.getDisplayService().clearDisplays(session);
-        plugin.getArenaManager().get(session.getArenaName()).ifPresent(arena ->
-                plugin.getSignService().resetBoard(arena));
 
         if (!forced) {
             if (winnerSeat == null) {
@@ -536,8 +572,7 @@ public final class GameManager {
             }
         }
 
-        List<UUID> uuids = new ArrayList<>(session.getPlayers().keySet());
-        for (UUID uuid : uuids) {
+        for (UUID uuid : new ArrayList<>(session.getPlayers().keySet())) {
             Player player = Bukkit.getPlayer(uuid);
             PlayerState state = session.getPlayers().get(uuid);
             byPlayer.remove(uuid);
@@ -557,21 +592,20 @@ public final class GameManager {
     }
 
     private void runRewardCommands(Player player, String arena, String result, int points) {
-        if (plugin.getConfig().getBoolean("reward.deposit-to-vault", false) && plugin.getEconomyService().isReady()) {
+        if (plugin.getConfig().getBoolean("reward.deposit-to-vault", false)
+                && plugin.getEconomyService().isReady()) {
             plugin.getEconomyService().deposit(player, points);
         }
-        List<String> commands = plugin.getConfig().getStringList("reward.commands");
-        for (String command : commands) {
+        for (String command : plugin.getConfig().getStringList("reward.commands")) {
             if (command == null || command.isBlank()) {
                 continue;
             }
-            String parsed = command
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command
                     .replace("{player}", player.getName())
                     .replace("{uuid}", player.getUniqueId().toString())
                     .replace("{points}", String.valueOf(points))
                     .replace("{arena}", arena)
-                    .replace("{result}", result);
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsed);
+                    .replace("{result}", result));
         }
     }
 

@@ -1,121 +1,69 @@
-# Match 5 — luck-based tabletop reveal game
+# Match 5 — luck-based tabletop reveal
 # Data folder: plugins/GenesiCore/games/Match5/
+#
+# Find all {match-to} of your sidebar icon. Each click costs 1 chance.
 
-# First player to find this many of their mob wins
 match-to: 5
+chances: 10
+# How many of each icon are hidden (must be >= match-to)
+copies-per-icon: 5
 
-# How many of each mob are hidden on the board (rest are blanks)
-copies-per-mob: 8
-
-# Default board size for new arenas (override per-arena with /m5admin setsize)
 board:
   columns: 6
   rows: 6
   cell-size: 1
   gap: 0
 
-# Finding your mob keeps your turn (set false for strict alternate turns)
+# Finding your icon keeps your turn
 keep-turn-on-hit: true
 
 lobby-countdown-seconds: 5
 start-countdown-seconds: 3
-
-# Optional entry fee charged on join (Vault when available)
 entry-fee: 0.0
-
-# Arcade points awarded at end (stored in points.yml)
 points-win: 3
 points-draw: 1
-
-# Who goes first: seat-a | seat-b | random
 first-turn: seat-a
-
 teleport-on-end: true
 
-# ---------------------------------------------------------------------------
-# Sidebar (right-hand scoreboard) — your mob + scores
-# ---------------------------------------------------------------------------
 sidebar:
   enabled: true
   title: "&6Match 5"
 
 # ---------------------------------------------------------------------------
-# Floor signs — click targets (like TicTacToe). Use /m5admin buildboard.
-# ---------------------------------------------------------------------------
-signs:
-  material: OAK_SIGN
-  write-text: true
-  glowing: false
-  hidden-lines:
-    - ""
-    - "  ?"
-    - ""
-    - ""
-  blank-lines:
-    - ""
-    - " ----"
-    - ""
-    - ""
-  hidden-color: GRAY
-  blank-color: LIGHT_GRAY
-  mob-color: YELLOW
-
-# ---------------------------------------------------------------------------
-# ItemDisplays float above each sign (spawn eggs when revealed).
-# Hidden uses PAPER — empty MAP items are nearly invisible as displays.
+# Flat ItemDisplays on top of each block (not upright signs)
 # ---------------------------------------------------------------------------
 displays:
   enabled: true
-  scale: 0.7
-  y-offset: 0.85
-  # CENTER faces the player (best for tabletop)
-  billboard: CENTER
+  scale: 0.9
+  # Just above the block top face
+  y-offset: 1.02
   hidden:
     material: PAPER
-    item-model: ""
-    custom-model-data: 0
     itemsadder-id: ""
-    display-name: "&7?"
   blank:
     material: LIGHT_GRAY_CONCRETE
-    item-model: ""
-    custom-model-data: 0
     itemsadder-id: ""
-    display-name: "&8Empty"
-  mob:
-    use-spawn-egg: true
-    material: PIG_SPAWN_EGG
-    item-model: ""
-    custom-model-data: 0
-    itemsadder-id: ""
-    display-name: ""
 
-# Mob pool — two distinct picks assigned at match start
-mobs:
-  - material: PIG_SPAWN_EGG
-    label: Pig
-  - material: COW_SPAWN_EGG
-    label: Cow
-  - material: SHEEP_SPAWN_EGG
-    label: Sheep
-  - material: CHICKEN_SPAWN_EGG
-    label: Chicken
-  - material: WOLF_SPAWN_EGG
-    label: Wolf
-  - material: CAT_SPAWN_EGG
-    label: Cat
-  - material: FOX_SPAWN_EGG
-    label: Fox
-  - material: RABBIT_SPAWN_EGG
-    label: Rabbit
-  - material: HORSE_SPAWN_EGG
-    label: Horse
-  - material: PANDA_SPAWN_EGG
-    label: Panda
+# Test icon pool — 5 genesicore ItemsAdder icons (two are picked per match)
+icons:
+  - itemsadder-id: genesicore:asset1734
+    label: Gem
+    fallback: PAPER
+  - itemsadder-id: genesicore:asset1784
+    label: Market Gem
+    fallback: PAPER
+  - itemsadder-id: genesicore:asset1964
+    label: Blue Coin
+    fallback: PAPER
+  - itemsadder-id: genesicore:asset1716
+    label: Fall Token
+    fallback: PAPER
+  - itemsadder-id: genesicore:asset1908
+    label: Currency
+    fallback: PAPER
 
 reward:
   deposit-to-vault: false
-  # Placeholders: {player} {uuid} {points} {arena} {result}
   commands: []
 
 messages:
@@ -129,21 +77,23 @@ messages:
   seat-taken: "&cSeat &e{seat}&c is already taken."
   already-playing: "&cYou are already in a Match 5 game."
   not-playing: "&cYou are not in a Match 5 game."
-  joined-waiting: "&aJoined &e{arena}&a as seat &f{seat}&a (&f{count}/2&a). Waiting..."
+  joined-waiting: "&aJoined &e{arena}&a as seat &f{seat}&a (&f{count}/2&a)."
   lobby-countdown: "&eGame starts in &f{seconds}&e..."
   need-more-players: "&cNeed 2 players to start."
   left: "&eYou left Match 5."
   player-left: "&e{player} &7left the lobby."
   go: "&a&lGO!"
-  your-mob: "&7Your mob is &e{mob}&7 — find &f5&7 of them!"
-  your-turn: "&aYour turn! Click a hidden tile."
+  your-icon: "&7Your icon is &e{icon}&7 — find &f{target}&7 of them. Chances: &b{chances}"
+  your-turn: "&aYour turn! Click a board block."
   opponent-turn: "&7Waiting for &e{player}&7..."
   keep-turn: "&aNice! Keep going."
   already-revealed: "&cThat tile is already revealed."
   not-your-turn: "&cIt's not your turn."
-  found-yours: "&aFound your &e{mob}&a! Score &f{score}/{target}"
-  found-opponent: "&cThat's &e{mob}&c — opponent's mob. Turn over."
-  found-blank: "&7Empty tile. Turn over."
+  no-chances: "&cYou're out of chances!"
+  out-of-chances: "&cOut of chances — you can't find more icons."
+  found-yours: "&aFound &e{icon}&a! &f{score}/{target} &7(&b{chances}&7 chances left)"
+  found-opponent: "&cThat's &e{icon}&c. &7(&b{chances}&7 chances left)"
+  found-blank: "&7Empty. &8(&b{chances}&8 chances left)"
   win: "&a{player} &fwins Match 5!"
   draw: "&eIt's a draw!"
   you-win: "&aYou win! &e+{points} &apoints"
@@ -162,7 +112,7 @@ messages:
   arena-deleted: "&aDeleted arena &e{arena}&a."
   lobby-set: "&aSet lobby for &e{arena}&a."
   origin-set: "&aSet board origin for &e{arena}&a (facing &f{facing}&a)."
-  board-built: "&aPlaced &f{count}&a floor signs for &e{arena}&a. Click signs to play."
+  board-built: "&aPlaced &f{count}&a flat tile previews for &e{arena}&a. Click the blocks to play."
   facing-set: "&aSet facing for &e{arena}&a to &f{facing}&a."
   join-set: "&aSet seat &e{seat}&a join block for &e{arena}&a."
   size-set: "&aSet board size for &e{arena}&a to &f{columns}x{rows}&a."

@@ -3,7 +3,7 @@ version: '${version}'
 main: dev.genesi.match5.Match5Plugin
 api-version: '26.1'
 authors: [Genesi]
-description: Luck-based tabletop Match 5 — find 5 of your mob, avoid your opponent's.
+description: Luck-based tabletop Match 5 — find 5 of your icon in 10 chances.
 depend: [GenesiGamesApi]
 softdepend: [Vault, ItemsAdder, GenesiCore]
 
