@@ -1,6 +1,5 @@
 package dev.genesi.match5.model;
 
-import org.bukkit.entity.TextDisplay;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.LinkedHashMap;
@@ -22,7 +21,6 @@ public final class GameSession {
     private final Map<Seat, UUID> seats = new LinkedHashMap<>();
     private TileContent[] hidden;
     private boolean[] revealed;
-    private TextDisplay[] displays;
     private int columns;
     private int rows;
     private State state = State.WAITING;
@@ -93,14 +91,6 @@ public final class GameSession {
 
     public void setRevealed(boolean[] revealed) {
         this.revealed = revealed;
-    }
-
-    public TextDisplay[] getDisplays() {
-        return displays;
-    }
-
-    public void setDisplays(TextDisplay[] displays) {
-        this.displays = displays;
     }
 
     public int getColumns() {

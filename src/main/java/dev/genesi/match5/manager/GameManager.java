@@ -120,6 +120,9 @@ public final class GameManager {
         Location lobby = arena.getLobby();
         if (lobby != null) {
             player.teleport(lobby);
+        } else if (arena.getOrigin() != null) {
+            Location stand = arena.getOrigin().clone().add(0.5, 1.0, 0.5);
+            player.teleport(stand);
         }
 
         plugin.getMessageService().send(player, "joined-waiting", Map.of(
@@ -211,11 +214,31 @@ public final class GameManager {
 
     public void forceStart(Arena arena) {
         GameSession session = byArena.get(arena.getName());
-        if (session == null || session.playerCount() < 2) {
+        if (session == null) {
+            plugin.getLogger().warning("forceStart: no session for " + arena.getName());
+            return;
+        }
+        if (session.playerCount() < 2) {
+            plugin.getLogger().warning("forceStart: need 2 players in " + arena.getName()
+                    + " (have " + session.playerCount() + ")");
             return;
         }
         session.cancelTasks();
         beginMatch(session, arena);
+    }
+
+    /** Returns a human-readable reason when force-start cannot run, or null on success. */
+    public String forceStartWithReason(Arena arena) {
+        GameSession session = byArena.get(arena.getName());
+        if (session == null) {
+            return "No players have joined this arena yet. Use /match5 join " + arena.getName();
+        }
+        if (session.playerCount() < 2) {
+            return "Need 2 players to start (currently " + session.playerCount() + ").";
+        }
+        session.cancelTasks();
+        beginMatch(session, arena);
+        return null;
     }
 
     public void forceStop(String arenaName) {
@@ -529,6 +552,8 @@ public final class GameManager {
         session.cancelTasks();
         plugin.getSidebarService().clearSession(session);
         plugin.getDisplayService().clearDisplays(session);
+        plugin.getArenaManager().get(session.getArenaName()).ifPresent(arena ->
+                plugin.getSignService().resetBoard(arena));
 
         if (!forced) {
             if (winnerSeat == null) {

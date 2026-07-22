@@ -11,6 +11,7 @@ import dev.genesi.match5.manager.ArenaManager;
 import dev.genesi.match5.manager.DisplayService;
 import dev.genesi.match5.manager.GameManager;
 import dev.genesi.match5.manager.SidebarService;
+import dev.genesi.match5.manager.SignService;
 
 public final class Match5Plugin extends GenesiGamePlugin {
 
@@ -20,6 +21,7 @@ public final class Match5Plugin extends GenesiGamePlugin {
     private EconomyService economyService;
     private MessageService messageService;
     private DisplayService displayService;
+    private SignService signService;
     private SidebarService sidebarService;
 
     @Override
@@ -29,6 +31,7 @@ public final class Match5Plugin extends GenesiGamePlugin {
         this.messageService = new MessageService(this, "&8[&6Match 5&8] &r");
         this.economyService = new EconomyService(this, "match5.bypass.fee");
         this.pointsService = new PointsService(this);
+        this.signService = new SignService(this);
         this.displayService = new DisplayService(this);
         this.sidebarService = new SidebarService(this);
         this.arenaManager = new ArenaManager(this);
@@ -47,7 +50,7 @@ public final class Match5Plugin extends GenesiGamePlugin {
 
         getServer().getPluginManager().registerEvents(new GameListener(this), this);
 
-        getLogger().info("Match5 enabled. minigame1 font glyphs | Data: "
+        getLogger().info("Match5 enabled. Floor signs + minigame1 glyphs | Data: "
                 + getDataFolder().getPath());
     }
 
@@ -55,9 +58,6 @@ public final class Match5Plugin extends GenesiGamePlugin {
     public void onDisable() {
         if (gameManager != null) {
             gameManager.shutdown();
-        }
-        if (displayService != null) {
-            displayService.clearAllPreviews();
         }
         if (arenaManager != null) {
             arenaManager.save();
@@ -97,6 +97,10 @@ public final class Match5Plugin extends GenesiGamePlugin {
 
     public DisplayService getDisplayService() {
         return displayService;
+    }
+
+    public SignService getSignService() {
+        return signService;
     }
 
     public SidebarService getSidebarService() {

@@ -131,7 +131,7 @@ public final class BoardGeometry {
             for (int dc = 0; dc < cellSize; dc++) {
                 int x = bx + (int) right.getX() * dc + (int) Math.round(forward.getX()) * dr;
                 int z = bz + (int) right.getZ() * dc + (int) Math.round(forward.getZ()) * dr;
-                // Allow clicking the table block or a flat plate sitting on it
+                // Table block (Y) or the floor sign on top (Y+1)
                 if (block.getX() == x && block.getZ() == z
                         && (block.getY() == by || block.getY() == by + 1)) {
                     return true;

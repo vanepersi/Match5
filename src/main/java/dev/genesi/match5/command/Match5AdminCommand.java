@@ -148,8 +148,8 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
                 "facing", arena.get().getFacing().name()
         ));
         plugin.getMessageService().sendRaw(sender,
-                "&7Origin = near-&fleft&7 corner from your view. Next: &e/m5admin buildboard "
-                        + arena.get().getName());
+                "&7Next: &e/m5admin buildboard " + arena.get().getName()
+                        + " &7then both players &e/match5 join " + arena.get().getName());
     }
 
     private void handleBuildBoard(CommandSender sender, String[] args) {
@@ -334,7 +334,11 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
             plugin.getMessageService().send(sender, "arena-not-found", Map.of("arena", args[1]));
             return;
         }
-        plugin.getGameManager().forceStart(arena.get());
+        String reason = plugin.getGameManager().forceStartWithReason(arena.get());
+        if (reason != null) {
+            plugin.getMessageService().sendRaw(sender, "&c" + reason);
+            return;
+        }
         plugin.getMessageService().send(sender, "force-started", Map.of("arena", arena.get().getName()));
     }
 
@@ -462,7 +466,7 @@ public final class Match5AdminCommand implements CommandExecutor, TabCompleter {
         plugin.getMessageService().sendRaw(sender, "&e/m5admin create|delete <arena>");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin setlobby <arena>");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin setorigin <arena> &7(look at near-LEFT corner block)");
-        plugin.getMessageService().sendRaw(sender, "&e/m5admin buildboard <arena> &7(flat icon previews on blocks)");
+        plugin.getMessageService().sendRaw(sender, "&e/m5admin buildboard <arena> &7(places signs with dark holes)");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin setjoin <arena> <a|b>");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin setsize <arena> <cols> <rows>");
         plugin.getMessageService().sendRaw(sender, "&e/m5admin forcestart|forcestop <arena>");

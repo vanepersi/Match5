@@ -149,11 +149,10 @@ public final class Arena {
     }
 
     public boolean isReady() {
-        return lobby != null && lobby.getWorld() != null
-                && origin != null && origin.getWorld() != null
-                && facing != null && facing.isCartesian() && facing != BlockFace.UP && facing != BlockFace.DOWN
-                && seatAJoin != null && seatAJoin.getWorld() != null
-                && seatBJoin != null && seatBJoin.getWorld() != null;
+        // Lobby + join seats are optional (command join works without them).
+        return origin != null && origin.getWorld() != null
+                && facing != null && facing.isCartesian()
+                && facing != BlockFace.UP && facing != BlockFace.DOWN;
     }
 
     public Map<String, Object> serialize() {

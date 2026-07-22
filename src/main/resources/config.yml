@@ -31,9 +31,12 @@ sidebar:
 font: minecraft:minigame1
 
 glyphs:
-  # Dark hole — unrevealed / empty
   hidden: "ꀆ"
   blank: "ꀆ"
+
+# Floor signs placed on top of each board block (Y+1)
+signs:
+  material: OAK_SIGN
 
 displays:
   enabled: true
@@ -58,7 +61,7 @@ messages:
   no-permission: "&cYou don't have permission."
   players-only: "&cOnly players can use this command."
   arena-not-found: "&cArena &e{arena}&c was not found."
-  arena-not-ready: "&cArena &e{arena}&c needs lobby, origin, facing, and both seat joins."
+  arena-not-ready: "&cArena &e{arena}&c needs an origin set (/m5admin setorigin)."
   arena-busy: "&cArena &e{arena}&c is already in a game."
   arena-full: "&cArena &e{arena}&c already has 2 players."
   seat-taken: "&cSeat &e{seat}&c is already taken."
@@ -66,12 +69,12 @@ messages:
   not-playing: "&cYou are not in a Match 5 game."
   joined-waiting: "&aJoined &e{arena}&a as seat &f{seat}&a (&f{count}/2&a)."
   lobby-countdown: "&eGame starts in &f{seconds}&e..."
-  need-more-players: "&cNeed 2 players to start."
+  need-more-players: "&cNeed 2 players to start. Both must /match5 join <arena>."
   left: "&eYou left Match 5."
   player-left: "&e{player} &7left the lobby."
   go: "&a&lGO!"
   your-icon: "&7Your icon is &e{icon}&7 — find &f{target}&7 of them. Chances: &b{chances}"
-  your-turn: "&aYour turn! Click a board block."
+  your-turn: "&aYour turn! Click a board sign."
   opponent-turn: "&7Waiting for &e{player}&7..."
   keep-turn: "&aNice! Keep going."
   already-revealed: "&cThat tile is already revealed."
@@ -99,7 +102,7 @@ messages:
   arena-deleted: "&aDeleted arena &e{arena}&a."
   lobby-set: "&aSet lobby for &e{arena}&a."
   origin-set: "&aSet board origin for &e{arena}&a (facing &f{facing}&a)."
-  board-built: "&aPlaced &f{count}&a dark-hole tiles for &e{arena}&a. Click the blocks to play."
+  board-built: "&aPlaced &f{count}&a signs for &e{arena}&a. Click the signs to play."
   facing-set: "&aSet facing for &e{arena}&a to &f{facing}&a."
   join-set: "&aSet seat &e{seat}&a join block for &e{arena}&a."
   size-set: "&aSet board size for &e{arena}&a to &f{columns}x{rows}&a."
