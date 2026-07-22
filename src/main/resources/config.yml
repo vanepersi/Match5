@@ -1,11 +1,10 @@
 # Match 5 — luck-based tabletop reveal
 # Data folder: plugins/GenesiCore/games/Match5/
 #
-# Find all {match-to} of your sidebar icon. Each click costs 1 chance.
+# Icons use ItemsAdder font minigame1 (genesicore textures/font/minigame1.png)
 
 match-to: 5
 chances: 10
-# How many of each icon are hidden (must be >= match-to)
 copies-per-icon: 5
 
 board:
@@ -14,7 +13,6 @@ board:
   cell-size: 1
   gap: 0
 
-# Finding your icon keeps your turn
 keep-turn-on-hit: true
 
 lobby-countdown-seconds: 5
@@ -29,38 +27,27 @@ sidebar:
   enabled: true
   title: "&6Match 5"
 
-# ---------------------------------------------------------------------------
-# Flat ItemDisplays on top of each block (not upright signs)
-# ---------------------------------------------------------------------------
+# ItemsAdder custom font (minecraft/font/minigame1.json)
+font: minecraft:minigame1
+
+glyphs:
+  # Dark hole — unrevealed / empty
+  hidden: "ꀆ"
+  blank: "ꀆ"
+
 displays:
   enabled: true
-  scale: 0.9
-  # Just above the block top face
+  scale: 1.6
   y-offset: 1.02
-  hidden:
-    material: PAPER
-    itemsadder-id: ""
-  blank:
-    material: LIGHT_GRAY_CONCRETE
-    itemsadder-id: ""
 
-# Test icon pool — 5 genesicore ItemsAdder icons (two are picked per match)
+# Player icon pool from minigame1 (two picked per match)
 icons:
-  - itemsadder-id: genesicore:asset1734
-    label: Gem
-    fallback: PAPER
-  - itemsadder-id: genesicore:asset1784
-    label: Market Gem
-    fallback: PAPER
-  - itemsadder-id: genesicore:asset1964
-    label: Blue Coin
-    fallback: PAPER
-  - itemsadder-id: genesicore:asset1716
-    label: Fall Token
-    fallback: PAPER
-  - itemsadder-id: genesicore:asset1908
-    label: Currency
-    fallback: PAPER
+  - character: "ꀈ"
+    label: Yellow
+  - character: "ꀉ"
+    label: Red
+  - character: "ꀊ"
+    label: Green
 
 reward:
   deposit-to-vault: false
@@ -112,7 +99,7 @@ messages:
   arena-deleted: "&aDeleted arena &e{arena}&a."
   lobby-set: "&aSet lobby for &e{arena}&a."
   origin-set: "&aSet board origin for &e{arena}&a (facing &f{facing}&a)."
-  board-built: "&aPlaced &f{count}&a flat tile previews for &e{arena}&a. Click the blocks to play."
+  board-built: "&aPlaced &f{count}&a dark-hole tiles for &e{arena}&a. Click the blocks to play."
   facing-set: "&aSet facing for &e{arena}&a to &f{facing}&a."
   join-set: "&aSet seat &e{seat}&a join block for &e{arena}&a."
   size-set: "&aSet board size for &e{arena}&a to &f{columns}x{rows}&a."

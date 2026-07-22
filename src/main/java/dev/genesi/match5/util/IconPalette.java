@@ -1,15 +1,13 @@
 package dev.genesi.match5.util;
 
-import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Loads the Match 5 icon pool and picks two distinct icons for a match.
+ * Loads Match 5 icons from {@code minigame1} font characters in config.
  */
 public final class IconPalette {
 
@@ -24,16 +22,17 @@ public final class IconPalette {
                 if (!(entry instanceof java.util.Map<?, ?> map)) {
                     continue;
                 }
-                String ia = stringVal(map.get("itemsadder-id"));
-                String label = stringVal(map.get("label"));
-                Material fallback = Material.matchMaterial(stringVal(map.get("fallback")).toUpperCase(Locale.ROOT));
-                if (fallback == null) {
-                    fallback = Material.PAPER;
-                }
-                if ((ia == null || ia.isBlank()) && fallback == Material.PAPER && (label == null || label.isBlank())) {
+                Object charObj = map.get("character");
+                Object labelObj = map.get("label");
+                if (charObj == null) {
                     continue;
                 }
-                icons.add(new IconDef(ia, label == null || label.isBlank() ? pretty(ia, fallback) : label, fallback));
+                String character = String.valueOf(charObj).trim();
+                if (character.isEmpty()) {
+                    continue;
+                }
+                String label = labelObj == null ? character : String.valueOf(labelObj).trim();
+                icons.add(new IconDef(character, label.isEmpty() ? character : label));
             }
         }
         if (icons.isEmpty()) {
@@ -58,24 +57,12 @@ public final class IconPalette {
         return new IconDef[]{palette.get(first), palette.get(second)};
     }
 
+    /** Yellow / red-orange / green from genesicore {@code minigame1} font. */
     private static List<IconDef> defaults() {
         return List.of(
-                new IconDef("genesicore:asset1734", "Gem", Material.PAPER),
-                new IconDef("genesicore:asset1784", "Market Gem", Material.PAPER),
-                new IconDef("genesicore:asset1964", "Blue Coin", Material.PAPER),
-                new IconDef("genesicore:asset1716", "Fall Token", Material.PAPER),
-                new IconDef("genesicore:asset1908", "Currency", Material.PAPER)
+                new IconDef("ꀈ", "Yellow"),
+                new IconDef("ꀉ", "Red"),
+                new IconDef("ꀊ", "Green")
         );
-    }
-
-    private static String stringVal(Object value) {
-        return value == null ? "" : String.valueOf(value).trim();
-    }
-
-    private static String pretty(String ia, Material fallback) {
-        if (ia != null && ia.contains(":")) {
-            return ia.substring(ia.indexOf(':') + 1);
-        }
-        return fallback.name().toLowerCase(Locale.ROOT).replace('_', ' ');
     }
 }

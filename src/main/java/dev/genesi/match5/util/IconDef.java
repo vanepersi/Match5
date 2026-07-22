@@ -1,19 +1,21 @@
 package dev.genesi.match5.util;
 
 /**
- * An ItemsAdder (or fallback) icon used as a Match 5 tile / player target.
+ * A Match 5 icon rendered via the ItemsAdder {@code minigame1} bitmap font.
  */
-public record IconDef(String itemsAdderId, String label, org.bukkit.Material fallback) {
+public record IconDef(String character, String label) {
 
     public IconDef {
+        if (character == null || character.isBlank()) {
+            character = "?";
+        }
         if (label == null || label.isBlank()) {
             label = "Icon";
         }
-        if (fallback == null) {
-            fallback = org.bukkit.Material.PAPER;
-        }
-        if (itemsAdderId != null && itemsAdderId.isBlank()) {
-            itemsAdderId = null;
-        }
+    }
+
+    /** Character + label for sidebar / messages, e.g. {@code ꀈ Yellow}. */
+    public String display() {
+        return character + " " + label;
     }
 }

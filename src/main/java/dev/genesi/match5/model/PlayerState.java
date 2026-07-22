@@ -62,7 +62,7 @@ public final class PlayerState {
     }
 
     public String getIconLabel() {
-        return icon == null ? "Icon" : icon.label();
+        return icon == null ? "Icon" : icon.display();
     }
 
     public int getScore() {

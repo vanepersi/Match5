@@ -1,37 +1,32 @@
 # Match 5
 
-Luck-based tabletop for Paper **26.1.2**. Click blocks to reveal IconsAdder icons. Find **5** of your sidebar icon within **10** chances.
+Luck-based tabletop for Paper **26.1.2**. Click blocks to reveal **minigame1** font icons. Find **5** of your icon within **10** chances.
 
 Data: `plugins/GenesiCore/games/Match5/`
 
+## Icons (ItemsAdder font `minigame1`)
+
+| Char | Name |
+|------|------|
+| ꀆ | Dark hole (hidden / blank) |
+| ꀈ | Yellow |
+| ꀉ | Red / orange |
+| ꀊ | Green |
+
+Font file: `assets/minecraft/font/minigame1.json` + `genesicore:font/minigame1.png`
+
 ## Rules
 
-- 2 players, each assigned a random icon from the pool
-- Board hides 5 of each icon + blanks
-- Click a **block** to reveal the flat icon on top
-- Your icon → +1 found (keep turn); wrong/blank → turn ends
-- Each click costs 1 chance (default 10)
-- First to find 5 wins; run out of chances and you’re done
+- 2 players each get a random colored icon (yellow / red / green)
+- Click a block → reveal flat TextDisplay glyph
+- Your icon → +1 (keep turn); wrong/blank → turn ends
+- 10 chances each; first to 5 wins
 
 ## Admin setup
 
-Stand facing the table. Origin = **near-left** corner from your view.
-
 ```
-/m5admin create main
-/m5admin setlobby main
-/m5admin setorigin main      # look at near-LEFT corner block
-/m5admin buildboard main     # flat ItemDisplay previews (not upright signs)
+/m5admin setorigin main      # near-LEFT corner while facing the table
+/m5admin buildboard main     # places flat ꀆ dark holes
 /m5admin setjoin main a
 /m5admin setjoin main b
-```
-
-## Icons (ItemsAdder test pool)
-
-Configured under `icons:` — currently 5 `genesicore:asset…` items. Swap IDs anytime.
-
-## Build
-
-```bash
-JAVA_HOME=/opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home ./gradlew build
 ```
